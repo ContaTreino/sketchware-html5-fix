@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPTV Player v9 v3 - Atualizado</title>
+  
+  <!-- External Dependencies -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css" rel="stylesheet">
+  <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
+  
+  <!-- Custom Stylesheets -->
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- External Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
+</head>
+
+<body data-theme="default">
+  <!-- Header Section -->
+  <header class="header d-flex justify-content-between align-items-center">
+    <div>
+      <h1>IPTV Player v9</h1>
+    </div>
+    <div class="header-buttons">
+      <button class="header-btn" data-bs-toggle="modal" data-bs-target="#searchModal" title="Buscar">
+        <i class="fas fa-search"></i>
+      </button>
+      <button class="header-btn" data-bs-toggle="modal" data-bs-target="#playlistModal" title="Adicionar Playlist">
+        <i class="fas fa-plus"></i>
+      </button>
+      <button class="header-btn" onclick="iptvApp.shareApp()" title="Compartilhar">
+        <i class="fas fa-share"></i>
+      </button>
+      <button class="header-btn" data-bs-toggle="modal" data-bs-target="#themeModal" title="Temas">
+        <i class="fas fa-palette"></i>
+      </button>
+      <div class="games-carousel">
+        <div class="games-scroll" id="gamesScroll"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Navigation Tabs -->
+  <nav class="main-nav">
+    <ul class="nav nav-tabs justify-content-center">
+      <li class="nav-item">
+        <button class="nav-link active" data-content="channels">
+          <i class="fas fa-tv"></i> Canais
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-content="movies">
+          <i class="fas fa-film"></i> Filmes
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-content="series">
+          <i class="fas fa-play-circle"></i> Séries
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-content="radios">
+          <i class="fas fa-radio"></i> Rádios
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-content="favorites">
+          <i class="fas fa-heart"></i> Favoritos
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Video Player Container -->
+  <div class="video-container" id="videoContainer">
+    <video id="videoPlayer" class="video-js vjs-default-skin" preload="none" controls data-setup="{}">
+      <source src="" type="application/x-mpegURL">
+      <p class="vjs-no-js">
+        Para assistir a este vídeo, ative o JavaScript e considere atualizar para um
+        <a href="https://videojs.com/html5-video-support/" target="_blank">navegador que
+        <span>suporte vídeo HTML5</span></a>.
+      </p>
+    </video>
+    
+    <!-- Player Logo -->
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" 
+         alt="Logo" class="player-logo" id="playerLogo">
+    
+    <!-- Video Placeholder -->
+    <div class="video-placeholder" id="videoPlaceholder">
+      <i class="fas fa-play-circle"></i>
+      <h4>Selecione um conteúdo para assistir</h4>
+      <p>Escolha um canal, filme, série ou rádio para começar</p>
+    </div>
+    
+    <!-- Radio Visual Display -->
+    <div class="radio-visual-display" id="radioVisualDisplay">
+      <div class="radio-background" id="radioBackground"></div>
+      <div class="radio-overlay"></div>
+      <div class="radio-main-content">
+        <img class="radio-main-image" id="radioMainImage" src="" alt="">
+        <div class="radio-main-info">
+          <h3 id="radioMainName">Nome da Rádio</h3>
+          <p id="radioMainFrequency">Frequência</p>
+          <div class="radio-playing-indicator">
+            <i class="fas fa-broadcast-tower"></i>
+            <span>No Ar</span>
+          </div>
+          <div class="radio-metadata-info" id="radioMetadataInfo">
+            <div class="now-playing-title">
+              <i class="fas fa-music"></i>
+              <span id="nowPlayingText">Carregando...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Radio Info Overlay -->
+    <div class="radio-info-overlay" id="radioInfoOverlay">
+      <img class="radio-logo-small" id="radioLogoSmall" src="" alt="">
+      <div class="radio-details">
+        <h6 class="radio-name" id="radioOverlayName">Nome da Rádio</h6>
+        <p class="radio-frequency" id="radioOverlayFrequency">Frequência</p>
+      </div>
+    </div>
+    
+    <!-- Custom Controls -->
+    <div class="custom-controls" id="customControls">
+      <button class="control-btn" id="playPauseBtn">
+        <i class="fas fa-play"></i>
+      </button>
+      <button class="control-btn" id="muteBtn">
+        <i class="fas fa-volume-up"></i>
+      </button>
+      <button class="control-btn" id="fullscreenBtn">
+        <i class="fas fa-expand"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content Sections -->
+  <main class="container-fluid p-0">
+    <!-- Channels Section -->
+    <section id="channelsSection" class="content-section active">
+      <div class="tab-bar">
+        <div class="tab-nav" id="channelTabs"></div>
+      </div>
+      <div class="content-list" id="channelsList"></div>
+    </section>
+
+    <!-- Movies Section -->
+    <section id="moviesSection" class="content-section">
+      <div class="tab-bar">
+        <div class="tab-nav" id="movieTabs"></div>
+      </div>
+      <div class="content-list" id="moviesList"></div>
+    </section>
+
+    <!-- Series Section -->
+    <section id="seriesSection" class="content-section">
+      <div class="tab-bar">
+        <div class="tab-nav" id="seriesTabs"></div>
+      </div>
+      <div class="content-list" id="seriesList"></div>
+      <div class="episode-list" id="episodesList">
+        <div class="episode-back-button">
+          <button class="btn btn-outline-secondary" onclick="iptvApp.hideSeriesEpisodes()">
+            <i class="fas fa-arrow-left"></i> Voltar para Séries
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Radios Section -->
+    <section id="radiosSection" class="content-section">
+      <div class="tab-bar">
+        <div class="tab-nav" id="radioTabs"></div>
+      </div>
+      <div class="content-list" id="radiosList"></div>
+    </section>
+
+    <!-- Favorites Section -->
+    <section id="favoritesSection" class="content-section">
+      <div class="favorites-header">
+        <h4>
+          <i class="fas fa-heart text-danger"></i> Meus Favoritos
+          <small class="text-muted" id="favoritesCount">(0 itens)</small>
+        </h4>
+      </div>
+      <div class="favorites-horizontal-scroll" id="favoritesList">
+        <div class="favorites-empty">
+          <i class="fas fa-heart-broken"></i>
+          <h5>Nenhum favorito ainda</h5>
+          <p>Adicione seus canais, filmes, séries e rádios favoritos clicando no coração <i class="fas fa-heart text-danger"></i></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modals -->
+  <!-- Search Modal -->
+  <div class="modal fade" id="searchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-search"></i> Buscar Conteúdo
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-12">
+              <input type="text" class="form-control" id="searchInput" placeholder="Digite o nome do que procura..." autocomplete="off">
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-12">
+              <small class="text-muted">Buscar em:</small>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="searchChannels" checked>
+                <label class="form-check-label" for="searchChannels">Canais</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="searchMovies" checked>
+                <label class="form-check-label" for="searchMovies">Filmes</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="searchSeries" checked>
+                <label class="form-check-label" for="searchSeries">Séries</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="searchRadios" checked>
+                <label class="form-check-label" for="searchRadios">Rádios</label>
+              </div>
+            </div>
+          </div>
+          <div class="search-results" id="searchResults">
+            <div class="text-center">
+              <i class="fas fa-search fa-2x mb-2" style="color: #666;"></i>
+              <p>Digite pelo menos 2 caracteres para buscar</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playlist Modal -->
+  <div class="modal fade" id="playlistModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-plus"></i> Adicionar Playlist
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="playlistForm" onsubmit="event.preventDefault(); iptvApp.savePlaylist();">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="playlistUrl" class="form-label">URL da Playlist IPTV</label>
+              <input type="url" class="form-control" id="playlistUrl" placeholder="http://exemplo.com:8080/get.php?username=user&password=pass&type=m3u_plus" required>
+              <div class="form-text">
+                Cole aqui a URL completa da sua playlist IPTV (deve conter username e password)
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Salvar Playlist
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme Modal -->
+  <div class="modal fade" id="themeModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-palette"></i> Escolher Tema
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3" id="themeOptions"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Continue Watching Modal -->
+  <div class="continue-modal" id="continueModal">
+    <div class="continue-content">
+      <h4>Continuar Assistindo?</h4>
+      <p id="continueMessage"></p>
+      <div class="continue-buttons">
+        <button class="continue-btn primary" onclick="iptvApp.continuePlaying()">Continuar</button>
+        <button class="continue-btn secondary" onclick="iptvApp.startFromBeginning()">Começar do Início</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Overlay -->
+  <div id="errorOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-tertiary); padding: 2rem; border-radius: 1rem; text-align: center; max-width: 90%; width: 400px;">
+      <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+      <h5 class="mb-3">Erro de Conexão</h5>
+      <p id="errorMessage" class="mb-4"></p>
+      <div>
+        <button class="btn btn-primary me-2" onclick="iptvApp.retryAction()">
+          <i class="fas fa-redo"></i> Tentar Novamente
+        </button>
+        <button class="btn btn-secondary" onclick="document.getElementById('errorOverlay').style.display='none'">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/themes.js"></script>
+  <script src="js/favorites.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+/* ===== THEME DEFINITIONS ===== */
+
+:root {
+  --primary-color: #00A848;
+  --primary-gradient: linear-gradient(135deg, #00A848, #00c851);
+  --bg-primary: #1f1f1f;
+  --bg-secondary: #252525;
+  --bg-tertiary: #303030;
+  --bg-quaternary: #404040;
+  --text-primary: #ffffff;
+  --text-secondary: #9CA3AF;
+  --text-tertiary: #D1D5DB;
+}
+
+/* Black Theme */
+[data-theme="black"] {
+  --primary-color: #ffffff;
+  --primary-gradient: linear-gradient(135deg, #333333, #555555);
+  --bg-primary: #000000;
+  --bg-secondary: #111111; /* Background for channels, movies, series and radios */
+  --bg-tertiary: #222222; /* Background for item lists */
+  --bg-quaternary: #333333;
+}
+
+/* Light Theme */
+[data-theme="claro"] {
+  --primary-color: #007bff;
+  --primary-gradient: linear-gradient(135deg, #007bff, #0056b3);
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-quaternary: #dee2e6;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #495057;
+}
+
+/* Blue Theme */
+[data-theme="azul"] {
+  --primary-color: #007bff;
+  --primary-gradient: linear-gradient(135deg, #007bff, #0056b3);
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-quaternary: #30363d;
+}
+
+/* Red Theme */
+[data-theme="vermelho"] {
+  --primary-color: #dc3545;
+  --primary-gradient: linear-gradient(135deg, #dc3545, #c82333);
+  --bg-primary: #1a0d0d;
+  --bg-secondary: #2d1b1b;
+  --bg-tertiary: #3d2626;
+  --bg-quaternary: #4d3131;
+}
+
+/* Green Theme */
+[data-theme="verde"] {
+  --primary-color: #28a745;
+  --primary-gradient: linear-gradient(135deg, #28a745, #1e7e34);
+  --bg-primary: #0d1a0d;
+  --bg-secondary: #1b2d1b;
+  --bg-tertiary: #263d26;
+  --bg-quaternary: #314d31;
+}
+
+/* Theme Utilities */
+.theme-option {
+  cursor: pointer;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.theme-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.theme-option.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(var(--primary-color), 0.3);
+}
+
+.theme-preview {
+  width: 100%;
+  height: 60px;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  overflow: hidden;
+}
+
+.theme-preview-color {
+  flex: 1;
+  height: 100%;
+}
+
+.theme-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
