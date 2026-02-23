@@ -32,7 +32,7 @@ API_ID = 00000                        # Obtenha em https://my.telegram.org
 API_HASH = "xxxxxx"                   # Obtenha em https://my.telegram.org
 PHONE = "+5511123456789"              # Seu número com código do país
 BOT_TOKEN = "xxxxxxxxxx"             # Token do @BotFather
-OWNER_ID = 12345678                   # Seu chat_id numérico
+OWNER_ID = 2061557102                 # Edivaldo Silva @Edkd1
 
 FOLDER_PATH = "data"
 FILE_PATH = os.path.join(FOLDER_PATH, "user_database.json")
@@ -86,6 +86,61 @@ scan_running = False
 scan_stats = {"last_scan": None, "users_scanned": 0, "groups_scanned": 0, "changes_detected": 0}
 
 
+def is_admin(user_id: int) -> bool:
+    """Verifica se o usuário é o administrador/dono do bot."""
+    return user_id == OWNER_ID
+
+
+async def registrar_interacao(event):
+    """Registra automaticamente o usuário que interage com o bot no banco."""
+    try:
+        user = await event.get_sender()
+        if not user or getattr(user, 'bot', False):
+            return
+        uid = str(user.id)
+        db = carregar_dados()
+        nome = f"{user.first_name or ''} {user.last_name or ''}".strip() or "Sem nome"
+        username = f"@{user.username}" if user.username else "Nenhum"
+        agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+        if uid not in db:
+            db[uid] = {
+                "id": user.id,
+                "nome_atual": nome,
+                "username_atual": username,
+                "grupos": [],
+                "primeiro_registro": agora,
+                "historico": [],
+                "origem": "interacao_bot"
+            }
+            salvar_dados(db)
+            log(f"➕ Novo usuário registrado via interação: {nome} ({uid})")
+        else:
+            changed = False
+            if db[uid]["nome_atual"] != nome:
+                db[uid]["historico"].append({
+                    "data": agora, "tipo": "NOME",
+                    "de": db[uid]["nome_atual"], "para": nome,
+                    "grupo": "Bot DM"
+                })
+                db[uid]["nome_atual"] = nome
+                changed = True
+            if db[uid]["username_atual"] != username:
+                db[uid]["historico"].append({
+                    "data": agora, "tipo": "USER",
+                    "de": db[uid]["username_atual"], "para": username,
+                    "grupo": "Bot DM"
+                })
+                db[uid]["username_atual"] = username
+                changed = True
+            if changed:
+                if len(db[uid]["historico"]) > MAX_HISTORY:
+                    db[uid]["historico"] = db[uid]["historico"][-MAX_HISTORY:]
+                salvar_dados(db)
+    except Exception as e:
+        log(f"⚠️ Erro ao registrar interação: {e}")
+
+
 # ══════════════════════════════════════════════
 # 🔔  NOTIFICAÇÃO
 # ══════════════════════════════════════════════
@@ -100,16 +155,27 @@ async def notificar(texto: str):
 # 🎨  INTERFACE — MENUS INLINE
 # ══════════════════════════════════════════════
 
-def menu_principal_buttons():
-    return [
+def menu_principal_buttons(user_id: int = 0):
+    btns = [
         [Button.inline("🔍 Buscar Usuário", b"cmd_buscar"),
          Button.inline("📊 Estatísticas", b"cmd_stats")],
-        [Button.inline("🔄 Iniciar Varredura", b"cmd_scan"),
-         Button.inline("📋 Últimas Alterações", b"cmd_recent")],
-        [Button.inline("📤 Exportar Banco", b"cmd_export"),
-         Button.inline("⚙️ Configurações", b"cmd_config")],
-        [Button.inline("ℹ️ Sobre", b"cmd_about")],
     ]
+    # Botões administrativos — somente para o dono
+    if is_admin(user_id):
+        btns.append(
+            [Button.inline("🔄 Iniciar Varredura", b"cmd_scan"),
+             Button.inline("📋 Últimas Alterações", b"cmd_recent")]
+        )
+        btns.append(
+            [Button.inline("📤 Exportar Banco", b"cmd_export"),
+             Button.inline("⚙️ Configurações", b"cmd_config")]
+        )
+    else:
+        btns.append(
+            [Button.inline("📋 Últimas Alterações", b"cmd_recent")]
+        )
+    btns.append([Button.inline("ℹ️ Sobre", b"cmd_about")])
+    return btns
 
 def voltar_button():
     return [[Button.inline("🔙 Menu Principal", b"cmd_menu")]]
@@ -338,6 +404,9 @@ _Próxima varredura automática em {SCAN_INTERVAL // 60} min_""",
 
 @bot.on(events.NewMessage(pattern='/start'))
 async def cmd_start(event):
+    await registrar_interacao(event)
+    sender = await event.get_sender()
+    uid = sender.id if sender else 0
     await event.respond(
         f"""╔══════════════════════════════╗
 ║  🕵️ **User Info Bot Pro v3.0**  ║
@@ -348,7 +417,6 @@ Bem-vindo ao monitor profissional de usuários!
 🔍 **Busque** por ID, @username ou nome
 📊 **Monitore** alterações em tempo real
 📜 **Histórico** completo de mudanças
-📤 **Exporte** dados do banco
 
 ━━━━━━━━━━━━━━━━━━━━━
 👨‍💻 _Créditos: Edivaldo Silva @Edkd1_
@@ -357,17 +425,19 @@ Bem-vindo ao monitor profissional de usuários!
 
 Selecione uma opção abaixo:""",
         parse_mode='md',
-        buttons=menu_principal_buttons()
+        buttons=menu_principal_buttons(uid)
     )
 
 
 @bot.on(events.NewMessage(pattern='/menu'))
 async def cmd_menu_msg(event):
+    await registrar_interacao(event)
     await cmd_start(event)
 
 
 @bot.on(events.NewMessage(pattern=r'/buscar\s+(.+)'))
 async def cmd_buscar_text(event):
+    await registrar_interacao(event)
     query = event.pattern_match.group(1).strip()
     results = buscar_usuario(query)
 
@@ -403,6 +473,7 @@ search_pending = {}
 async def callback_handler(event):
     data = event.data.decode()
     chat_id = event.chat_id
+    sender_id = event.sender_id
 
     try:
         message = await event.get_message()
@@ -416,7 +487,7 @@ async def callback_handler(event):
 
 Selecione uma opção:""",
                 parse_mode='md',
-                buttons=menu_principal_buttons()
+                buttons=menu_principal_buttons(sender_id)
             )
 
         # ── Buscar ──
@@ -479,8 +550,11 @@ _Créditos: @Edkd1_""",
                 buttons=voltar_button()
             )
 
-        # ── Iniciar Varredura ──
+        # ── Iniciar Varredura (ADMIN ONLY) ──
         elif data == "cmd_scan":
+            if not is_admin(sender_id):
+                await event.answer("🔒 Apenas o administrador pode iniciar varreduras.", alert=True)
+                return
             if scan_running:
                 await event.answer("⏳ Varredura já em andamento!", alert=True)
             else:
@@ -521,8 +595,11 @@ _Créditos: @Edkd1_""",
 
             await message.edit(text, parse_mode='md', buttons=paginar_buttons("recent", page, total_pages))
 
-        # ── Exportar ──
+        # ── Exportar (ADMIN ONLY) ──
         elif data == "cmd_export":
+            if not is_admin(sender_id):
+                await event.answer("🔒 Apenas o administrador pode exportar o banco.", alert=True)
+                return
             if os.path.exists(FILE_PATH):
                 await bot.send_file(
                     chat_id, FILE_PATH,
@@ -655,6 +732,7 @@ _Monitor profissional de usuários_
 # ── Handler: texto livre (busca quando modo ativo) ──
 @bot.on(events.NewMessage(func=lambda e: e.is_private and not e.text.startswith('/')))
 async def text_handler(event):
+    await registrar_interacao(event)
     chat_id = event.chat_id
 
     if chat_id in search_pending:
@@ -684,7 +762,7 @@ async def text_handler(event):
         await event.reply(
             "💡 Use o menu para navegar ou `/buscar termo` para buscar.",
             parse_mode='md',
-            buttons=menu_principal_buttons()
+            buttons=menu_principal_buttons(event.chat_id)
         )
 
 
