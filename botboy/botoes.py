@@ -17,12 +17,13 @@ def is_admin(user_id: int) -> bool:
     return user_id == OWNER_ID
 
 def menu_principal_buttons(user_id: int = 0):
-    """Menu principal com botões inline."""
+    """Menu principal com botões inline — inclui consulta CPF e compositor."""
     btns = [
         [Button.inline("🔍 Buscar Usuário", b"cmd_buscar"),
          Button.inline("📊 Estatísticas", b"cmd_stats")],
         [Button.inline("🌐 Consultar Telegram", b"cmd_tg_search"),
          Button.inline("📋 Últimas Alterações", b"cmd_recent")],
+        [Button.inline("🔎 Consultar CPF", b"cmd_consultar_cpf")],
     ]
     if is_admin(user_id):
         btns.append([
@@ -33,7 +34,13 @@ def menu_principal_buttons(user_id: int = 0):
             Button.inline("📤 Exportar Banco", b"cmd_export"),
             Button.inline("⚙️ Configurações", b"cmd_config")
         ])
-        btns.append([Button.inline("🧵 Threads", b"cmd_threads")])
+        btns.append([
+            Button.inline("🧵 Threads", b"cmd_threads"),
+            Button.inline("✉️ Compositor", b"cmd_compositor")
+        ])
+        btns.append([
+            Button.inline("📡 Auto-Resposta", b"cmd_auto_resposta"),
+        ])
     btns.append([Button.inline("ℹ️ Sobre", b"cmd_about")])
     return btns
 
@@ -70,3 +77,14 @@ def resultado_multiplo_buttons(results: list):
         btns.append([Button.inline(label[:40], f"profile_{r['id']}".encode())])
     btns.append([Button.inline("🔙 Menu", b"cmd_menu")])
     return btns
+
+def auto_resposta_menu_buttons():
+    """Botões do menu de auto-resposta em grupos."""
+    return [
+        [Button.inline("➕ Adicionar Grupo", b"ar_add_grupo"),
+         Button.inline("➖ Remover Grupo", b"ar_rem_grupo")],
+        [Button.inline("💬 Definir Resposta", b"ar_set_resposta")],
+        [Button.inline("📋 Ver Grupos Ativos", b"ar_listar_grupos")],
+        [Button.inline("🔄 Toggle Auto-Resposta", b"ar_toggle")],
+        [Button.inline("🔙 Menu Principal", b"cmd_menu")]
+    ]
